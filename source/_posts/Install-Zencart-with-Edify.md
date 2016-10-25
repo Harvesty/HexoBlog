@@ -397,7 +397,7 @@ chmod 777 admin/images/graphs
 
 ### 执行安装
 
-打开链接 <http://www.devel.orz/zc_install> ，安装提示进行安装。
+打开链接 <http://www.devel.orz/zc_install> ，按照提示进行安装。
 
 > 如果已经设定了相关的权限，还是碰到类似777文件夹无权限的问题，可能忘了关闭SELinux。运行 **setenforce 0**，继续安装。
 
