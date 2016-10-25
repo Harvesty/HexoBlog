@@ -22,4 +22,10 @@ tags: VBox
 "C:\Program Files\Oracle\VirtualBox\VirtualBox.exe" --comment "CentOS" --startvm "e03eee5f-692f-43c4-967d-9b2b8ac5c582"
 ```
 
-ff
+修改为：
+
+```
+"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" startvm "e03eee5f-692f-43c4-967d-9b2b8ac5c582" --type headless
+```
+
+这样，每次双击这个快捷方式，虚拟机就在后台自动运行了。
