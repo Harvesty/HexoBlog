@@ -213,4 +213,195 @@ vi /etc/sysconfig/selinux
 SELINUX=disabled
 ```
 
-### 实时
+设置好了并不能即时生效，需要重启系统。要想即时生效，可执行命令：
+
+```bash
+setenforce 0
+```
+
+查看SELinux状态，可用：
+
+```bash
+getenforce
+```
+
+### 修改主机hosts
+
+这一步骤是可选的，只是为了开发时显得更正规。Windows 7的hosts文件放在*C:\Windows\System32\drivers\etc\hosts*，以管理员权限打开，可用NotePad++。追加如下内容：
+
+```
+192.168.56.99 www.devel.orz devel.orz
+```
+
+这样在浏览器里直接访问<http://www.devel.orz>就可以访问刚配置的服务器了。
+
+### 安装MySQL
+
+由于MySQL默认不在Yum的repo源里，要使用yum安装必须先添加MySQL的源。
+
+```bash
+rpm -Uvh http://repo.mysql.com//mysql57-community-release-el7-9.noarch.rpm
+```
+
+执行以上命令，MySQL就添加到了Yum的源。添加的源里包含了所有当前可用的MySQL版本，默认MySQL5.7版。当前Zencart不能使用这个版本，需要更改默认版本为5.6版，编辑源：
+
+```bash
+vi /etc/yum.repos.d/mysql-community.repo
+```
+
+把*[mysql56-community]*标签下的enable值设为1，如下：
+
+```
+[mysql56-community]
+name=MySQL 5.6 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.6-community/el/6/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+```
+
+其他标签下的enable值设为0，这里只要修改*[mysql57-community]*标签的enable值就可以了。
+开始安装：
+
+```
+yum install mysql-server -y
+```
+
+安装完后，进行一些中文用户必要的设置，修改my.cnf以支持UTF-8：
+
+```
+vi /etc/my.cnf
+```
+
+在 *[mysqld]* 标签下追加：
+
+```
+collation-server=utf8_general_ci
+character-set-server=utf8
+```
+最好同时在 *[mysqld]* 标签下追加：
+
+```
+sql_mode=IGNORE_SPACE,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+```
+
+不然可能网站后台不能登陆。重启mysql服务：
+
+```
+systemctl restart mysqld
+```
+
+这样以后创建的数据库，就默认支持UTF-8了。
+下面进行一些安装后的初始化，运行指令：
+
+```
+mysql_secure_installation
+```
+
+根据提示，先设置root密码，后面的全选yes即可。
+
+以root用户登陆mysql：
+
+```
+mysql -u root -p
+```
+
+输入刚才设定的密码，就进入了SQL命令行交互模式，依次输入以下SQL语句，创建后面安装需要的数据库：
+
+```sql
+create database zencartdb;
+create user 'zencart'@'localhost' identified by 'zencart';
+grant all privileges on zencartdb.* to 'zencart'@'localhost';
+flush privileges;
+exit;
+```
+
+这样就创建了数据库zencartdb及普通用户zencart。
+
+### 安装PHP
+
+安装PHP及ZenCart需要的组件：
+
+```
+sudo yum -y install php php-mysql php-gd php-ldap php-odbc php-pear php-xml php-xmlrpc php-mbstring php-snmp php-soap php-mcrypt curl zlib
+```
+
+安装 phpMyAdmin（可选）
+
+```
+yum -y install epel-release
+yum -y install phpmyadmin
+```
+
+配置 *phpMyAdmin.conf* ：
+
+```bash
+vi /etc/httpd/conf.d/phpMyAdmin.conf
+```
+
+修改后的部分为：
+
+```
+<Directory /usr/share/phpMyAdmin/>
+   AddDefaultCharset UTF-8
+
+   <IfModule mod_authz_core.c>
+     # Apache 2.4
+     <RequireAny>
+       Require all granted #原来两行删除，修改为这样
+     </RequireAny>
+   </IfModule>
+   <IfModule !mod_authz_core.c>
+     # Apache 2.2
+     Order Deny,Allow
+     Deny from All
+     Allow from 127.0.0.1
+     Allow from ::1
+   </IfModule>
+</Directory>
+```
+
+重启Apache服务:
+
+```bash
+systemctl restart httpd.service
+```
+
+在浏览器打开 <http://www.devel.orz/phpmyadmin> 就可以看到phpMyAdmin的登陆页面了。
+
+## Zencart安装
+
+### 上传
+
+使用工具将 *\Quick Start Demo Package\Zencart* 目录下的所有内容复制到CentOS的 */var/www/html/* 目录下。
+
+### 设置配置文件及相关权限
+
+依次执行如下指令：
+
+```bash
+cd /var/www/html/
+mv admin/includes/dist-configure.php admin/includes/configure.php
+mv includes/dist-configure.php includes/configure.php
+chmod 777 admin/includes/configure.php
+chmod 777 includes/configure.php
+chmod 777 cache
+chmod 777 includes/languages/english/html_includes
+chmod 777 logs
+chmod 777 media
+chmod 777 pub
+chmod 777 images/
+chmod 777 admin/backups
+chmod 777 admin/images/graphs
+```
+
+### 执行安装
+
+打开链接 <http://www.devel.orz/zc_install> ，安装提示进行安装。
+
+> 如果已经设定了相关的权限，还是碰到类似777文件夹无权限的问题，可能忘了关闭SELinux。运行 **setenforce 0**，继续安装。
+
+### 安装后
+
+由于安装是Edify定制版，安装后需要执行文件 *sql-patch.txt* 内的SQL语句。
+现在网站应该能够运行，但是注册用户的时候要用到Google验证码，根据提示申请一下，域名填写 *www.devel.orz* ，把申请到的google_site_key及google_secret_key更新到数据库表 *edify* ，就可以正常注册了。
