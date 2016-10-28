@@ -1,5 +1,5 @@
 ---
-title: VBox不同连接下的Ubuntu网络设置
+title: VBox中Ubuntu在不同连接方式下的网络配置
 date: 2016-10-28 13:25:32
 tags: VBox,Ubuntu,network
 ---
