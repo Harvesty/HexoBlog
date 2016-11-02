@@ -185,7 +185,7 @@ systemctl stop httpd.service
 systemctl restart httpd.service
 ```
 
-这时，我们已经安装并启用了Apache，可以在主机（这里指Windows 7）浏览器打开链接 <http://192.168.56.99> 测试Apache是否可用。这时，浏览器并不能显示一个有效的页面。因为，我们的请求被防火墙拦截了。
+这时，我们已经安装并启用了Apache，可以在主机（这里指Windows 7）浏览器打开链接 <http://devel.orz/> 测试Apache是否可用（请先**修改主机hosts**，参见下一部分）。这时，浏览器并不能显示一个有效的页面。因为，我们的请求被防火墙拦截了。
 下面，我们配置一下防火墙，使Web服务能够正常访问：
 
 ```
