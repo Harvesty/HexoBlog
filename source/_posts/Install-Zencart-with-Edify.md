@@ -194,7 +194,7 @@ firewall-cmd --permanent --zone=public --add-service=https
 firewall-cmd --reload
 ```
 
-这时，再次访问 <http://192.168.56.99> ，应该显示Apache的默认页面。
+这时，再次访问 <http://devel.orz/> ，应该显示Apache的默认页面。
 由于后面的安装涉及文件操作，CentOS的SELinux服务会阻止我们对文件进行操作。由于是开发环境，我们就简单将其关闭。编辑SELinux配置文件：
 
 ```bash
